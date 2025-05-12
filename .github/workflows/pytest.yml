@@ -2,12 +2,12 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ develop, main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ develop, main ]
+    branches: [ main, develop ]
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,16 +33,27 @@ jobs:
       run: |
         docker build -t devops-job-tracker:latest .
 
-    - name: Debug DockerHub Credentials
+    - name: Confirm Secrets Are Present (Safe Debug)
       run: |
-        echo "DockerHub Username: ${{ secrets.DOCKER_USERNAME }}"
-        # Do not print DockerHub Password in the logs for security reasons
+        if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
+          echo "❌ DOCKER_USERNAME is missing"
+          exit 1
+        else
+          echo "✅ DOCKER_USERNAME is set"
+        fi
+
+        if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
+          echo "❌ DOCKER_PASSWORD is missing"
+          exit 1
+        else
+          echo "✅ DOCKER_PASSWORD is set"
+        fi
 
     - name: Login to DockerHub
       run: |
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Push image to DockerHub
+    - name: Tag and Push Docker image
       run: |
         docker tag devops-job-tracker:latest ${{ secrets.DOCKER_USERNAME }}/devops-job-tracker:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/devops-job-tracker:latest
