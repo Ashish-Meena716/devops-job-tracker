@@ -33,8 +33,14 @@ jobs:
       run: |
         docker build -t devops-job-tracker:latest .
 
+    - name: Debug DockerHub Credentials
+      run: |
+        echo "DockerHub Username: ${{ secrets.DOCKER_USERNAME }}"
+        # echo "DockerHub Password: ${{ secrets.DOCKER_PASSWORD }}" # Never print password in logs
+
     - name: Login to DockerHub
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
     - name: Push image to DockerHub
       run: |
