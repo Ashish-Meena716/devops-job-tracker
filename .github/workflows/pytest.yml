@@ -33,7 +33,7 @@ jobs:
       run: |
         docker build -t devops-job-tracker:latest .
 
-    - name: Confirm Secrets Are Present (Safe Debug)
+    - name: Validate DockerHub secrets
       run: |
         if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
           echo "❌ DOCKER_USERNAME is missing"
@@ -53,8 +53,8 @@ jobs:
       run: |
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Tag and Push Docker image
+    - name: Tag and Push Docker image to DockerHub
       run: |
-        docker tag devops-job-tracker:latest ${{ secrets.DOCKER_USERNAME }}/devops-job-tracker:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/devops-job-tracker:latest
-
+        IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/devops-job-tracker:latest
+        docker tag devops-job-tracker:latest $IMAGE_NAME
+        docker push $IMAGE_NAME
