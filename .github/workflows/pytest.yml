@@ -36,6 +36,12 @@ jobs:
     - name: Debug DockerHub Credentials
       run: |
         echo "DockerHub Username: ${{ secrets.DOCKER_USERNAME }}"
+        # echo "DockerHub Password: ${{ secrets.DOCKER_PASSWORD }}"  # Do not print password
+
+
+    - name: Debug DockerHub Credentials
+      run: |
+        echo "DockerHub Username: ${{ secrets.DOCKER_USERNAME }}"
         # echo "DockerHub Password: ${{ secrets.DOCKER_PASSWORD }}" # Never print password in logs
 
     - name: Login to DockerHub
