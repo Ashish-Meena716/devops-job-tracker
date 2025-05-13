@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 
 app = Flask(__name__)
 
@@ -16,8 +16,8 @@ def add_job():
 
 @app.route("/list-jobs")
 def list_jobs():
-    return {"jobs": jobs}
+    return jsonify({"jobs": jobs})
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
+    # IMPORTANT: host="0.0.0.0" makes the app reachable from outside the container
+    app.run(host="0.0.0.0", port=5000, debug=True)
