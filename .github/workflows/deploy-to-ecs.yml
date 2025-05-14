@@ -23,7 +23,6 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Log in to Amazon ECR
-      id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
     - name: Build, tag, and push Docker image to ECR
@@ -41,17 +40,31 @@ jobs:
           --query taskDefinition \
           > task-definition.json
 
-    - name: Update Task Definition Image
-      run: |
-        IMAGE_URI=${{ secrets.ECR_REPO_URI }}:latest
-        jq '.containerDefinitions[0].image="'$IMAGE_URI'"' task-definition.json > new-task-definition.json
-
-    - name: Register new Task Definition revision
+    - name: Update and Register Task Definition
       id: register-task-def
       run: |
+        IMAGE_URI=${{ secrets.ECR_REPO_URI }}:latest
+
+        jq --arg IMAGE "$IMAGE_URI" '
+        {
+          family: .family,
+          taskRoleArn: .taskRoleArn,
+          executionRoleArn: .executionRoleArn,
+          networkMode: .networkMode,
+          containerDefinitions: [
+            .containerDefinitions[0] + { image: $IMAGE }
+          ],
+          requiresCompatibilities: .requiresCompatibilities,
+          cpu: .cpu,
+          memory: .memory
+        }
+        ' task-definition.json > new-task-definition.json
+
         TASK_DEF_ARN=$(aws ecs register-task-definition \
           --cli-input-json file://new-task-definition.json \
-          --query 'taskDefinition.taskDefinitionArn' --output text)
+          --query 'taskDefinition.taskDefinitionArn' \
+          --output text)
+
         echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
 
     - name: Deploy new Task Definition to ECS Service
@@ -60,4 +73,3 @@ jobs:
           --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
           --service ${{ secrets.ECS_SERVICE_NAME }} \
           --task-definition $TASK_DEF_ARN
-
